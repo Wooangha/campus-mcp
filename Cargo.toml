@@ -1,0 +1,20 @@
+[package]
+name = "campus-mcp"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+async-trait = "0.1"
+base64 = "0.22"
+clap = { version = "4", features = ["derive"] }
+dotenvy = "0.15"
+lms-helper = { git = "ssh://git@github.com/Wooangha/lms-helper.git", rev = "5eab343cf153ea22d215f1172fd262a1e52df885" }
+rmcp = { version = "=3.5.0", features = ["transport-io", "client", "transport-child-process"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time", "io-std", "process"] }
+url = "2"
+
+[dev-dependencies]
+tempfile = "3"
