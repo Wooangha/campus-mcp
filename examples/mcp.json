@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "campus": {
+      "command": "/absolute/path/campus-mcp/target/debug/campus-mcp",
+      "args": ["--env-file", "/absolute/path/private.env", "serve", "--modules", "lms,mail"]
+    }
+  }
+}
