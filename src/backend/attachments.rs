@@ -9,7 +9,7 @@ use std::{
     path::PathBuf,
 };
 const MAX_BYTES: usize = 4 * 1024 * 1024;
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct Attachments {
     next: u64,
     paths: HashMap<String, PathBuf>,
@@ -22,6 +22,7 @@ impl Attachments {
             warnings.push("Only the first 100 attachments are exposed in this response.".into());
         }
         let files: Vec<_> = content.attachments.into_iter().take(100).map(|file| {
+            let size_bytes = file.local_path.as_ref().and_then(|p| std::fs::metadata(p).ok()).map(|m| m.len());
             let id = file.local_path.map(|path| {
                 self.next += 1;
                 let id = format!("file-{}", self.next);
@@ -30,7 +31,7 @@ impl Attachments {
                 while self.order.len() > 128 { if let Some(old) = self.order.pop_front() { self.paths.remove(&old); } }
                 id
             });
-            json!({"id":id,"name":file.name,"inline":file.inline,"downloaded":id.is_some(),"warning":file.error.map(|_| "Attachment download failed or exceeded the download limit")})
+            json!({"id":id,"name":file.name,"inline":file.inline,"downloaded":id.is_some(),"size_bytes":size_bytes,"within_read_size_limit":size_bytes.map(|n| n <= MAX_BYTES as u64),"warning":file.error.map(|_| "Attachment download failed or exceeded the download limit")})
         }).collect();
         json!({"title":content.title,"body":content.body.chars().take(100_000).collect::<String>(),"body_truncated":content.body.chars().count()>100_000,"attachments":files,"warnings":warnings,"fetched_at":lms_helper::time::now_unix(),"untrusted_source":true})
     }
@@ -51,7 +52,10 @@ impl Attachments {
             .read_to_end(&mut bytes)
             .map_err(|_| "Cannot read attachment")?;
         if bytes.len() > MAX_BYTES {
-            return Err("Attachment exceeds the 4 MiB MCP response limit; open it in the source application.".into());
+            return Err(
+                "Attachment exceeds the 4 MiB raw-file limit; open it in the source application."
+                    .into(),
+            );
         }
         let mime = if bytes.starts_with(b"%PDF-") {
             Some("application/pdf")

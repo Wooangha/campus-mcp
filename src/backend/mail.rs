@@ -96,7 +96,8 @@ fn list_args(args: &Value) -> Result<(u32, bool), String> {
     Ok((limit, unread_only))
 }
 fn validate_id(id: &str) -> Result<(), String> {
-    if id.is_empty()
+    if matches!(id, "." | "..")
+        || id.is_empty()
         || id.len() > 2048
         || id.chars().any(char::is_whitespace)
         || id.chars().any(char::is_control)
@@ -175,7 +176,7 @@ mod tests {
     fn ids_are_validated_before_client_or_auth_initialization() {
         assert!(validate_id("AAMk/a+b==").is_ok());
         assert!(validate_id(&"a".repeat(2048)).is_ok());
-        for id in ["", " ", "a\nb", "a\0b"] {
+        for id in ["", ".", "..", " ", "a\nb", "a\0b"] {
             assert!(validate_id(id).is_err());
         }
         assert!(validate_id(&"a".repeat(2049)).is_err());

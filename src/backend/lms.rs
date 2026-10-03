@@ -103,14 +103,6 @@ impl LmsBackend {
                 "online_text":s.online_text,"modified":s.modified,"due":s.due,
             })).map_err(FetchError::from_submission),
         };
-        // Board collection can return partial results after an expired session.
-        // Keep those results, but start the next request with a fresh session.
-        if result
-            .as_ref()
-            .is_ok_and(|value| value.get("partial") == Some(&Value::Bool(true)))
-        {
-            self.client = None;
-        }
         self.finish_call(result)
     }
 
@@ -124,15 +116,23 @@ impl LmsBackend {
         let result = content::read_lms(client, &url, cache)
             .await
             .map_err(|_| FETCH.to_string());
-        // Attachment downloads may report authentication failures inside Content.
-        if result
-            .as_ref()
-            .is_ok_and(|content| content.attachments.iter().any(|file| file.error.is_some()))
-        {
-            self.client = None;
-        }
+        // Partial board/file failures include permissions and size limits; they
+        // must not trigger repeated password logins. A failed source request
+        // still invalidates the session through finish below.
+        let result = result.map(|mut content| {
+            sanitize_partial(&mut content);
+            content
+        });
         self.finish(result)
     }
+}
+
+fn sanitize_partial(content: &mut Content) {
+    for warning in &mut content.warnings {
+        *warning =
+            "Some PLMS content could not be collected; source material may be incomplete.".into();
+    }
+    content.warnings.dedup();
 }
 
 enum FetchError {
@@ -235,6 +235,16 @@ fn validate_url(raw: &str, assignment_only: bool) -> Result<String, String> {
 mod tests {
     use super::*;
 
+    #[test]
+    fn partial_warnings_do_not_expose_upstream_diagnostics() {
+        let mut content = Content {
+            warnings: vec!["https://example.test/?secret=value".into()],
+            ..Default::default()
+        };
+        sanitize_partial(&mut content);
+        assert!(!content.warnings[0].contains("secret"));
+        assert!(content.warnings[0].contains("incomplete"));
+    }
     #[test]
     fn only_supported_read_only_plms_urls_are_accepted() {
         let assignment = "https://plms.postech.ac.kr/mod/assign/view.php?id=233087";

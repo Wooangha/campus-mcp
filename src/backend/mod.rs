@@ -58,7 +58,12 @@ impl LiveBackend {
                     self.attachments.lock().await.register(content),
                 ))
             }
-            "attachment_read" => self.attachments.lock().await.read(&args),
+            "attachment_read" => {
+                let registry = self.attachments.lock().await.clone();
+                tokio::task::spawn_blocking(move || registry.read(&args))
+                    .await
+                    .map_err(|_| "Attachment reader failed".to_string())?
+            }
             "mail_list" => Ok(CallToolResult::structured(stamp(
                 self.mail.lock().await.list(&args).await?,
             ))),
