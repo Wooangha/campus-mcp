@@ -9,7 +9,15 @@ async-trait = "0.1"
 base64 = "0.22"
 clap = { version = "4", features = ["derive"] }
 dotenvy = "0.15"
-lms-helper = { git = "ssh://git@github.com/Wooangha/lms-helper.git", rev = "5eab343cf153ea22d215f1172fd262a1e52df885" }
+chrono = { version = "0.4.45", default-features = false, features = ["clock"] }
+hex = "0.4"
+openssl = "0.10"
+p256 = { version = "0.13", features = ["arithmetic"] }
+regex = "1"
+reqwest = { version = "0.12", features = ["cookies", "rustls-tls"] }
+scraper = "0.27.0"
+thiserror = "2"
+tempfile = "3"
 rmcp = { version = "=3.5.0", features = ["transport-io"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -18,4 +26,3 @@ url = "2"
 
 [dev-dependencies]
 rmcp = { version = "=3.5.0", features = ["client"] }
-tempfile = "3"

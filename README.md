@@ -2,11 +2,11 @@
 
 PLMS와 Outlook 메일을 AI 클라이언트에서 조회하는 로컬 MCP 서버입니다. 하나의 서버 안에서 LMS와 메일 모듈을 분리했습니다. `--modules lms` 또는 `--modules mail`로 필요한 도구만 노출할 수 있습니다.
 
-기존 `lms-helper`의 인증·수집 코드를 특정 Git 커밋에 고정해 재사용합니다. Discord 봇, 자동 알림, 중요도 분류는 실행하지 않으며 LLM API 키도 필요하지 않습니다. 답변과 첨부 해석은 연결한 AI 클라이언트가 담당합니다.
+PLMS·Outlook 인증과 수집 코드는 `src/services`에 포함되어 있으며, 별도 `lms-helper` 저장소나 패키지에 의존하지 않습니다. Discord 봇, 자동 알림, 중요도 분류는 실행하지 않으며 LLM API 키도 필요하지 않습니다. 답변과 첨부 해석은 연결한 AI 클라이언트가 담당합니다.
 
 ## 설치
 
-Rust stable, Git, 두 private 저장소(`campus-mcp`, `lms-helper`)에 대한 GitHub SSH 접근 권한이 필요합니다. OpenSSL 빌드 환경이 필요할 수 있습니다(macOS의 Homebrew OpenSSL, Linux의 OpenSSL 개발 패키지 및 pkg-config).
+Rust stable, Git, 이 저장소(`campus-mcp`)에 대한 GitHub 접근 권한이 필요합니다. OpenSSL 빌드 환경이 필요할 수 있습니다(macOS의 Homebrew OpenSSL, Linux의 OpenSSL 개발 패키지 및 pkg-config).
 
 ```sh
 git clone git@github.com:Wooangha/campus-mcp.git
@@ -31,7 +31,7 @@ cargo build --locked
 ./target/debug/campus-mcp serve --modules mail
 ```
 
-LMS는 `LMS_SERVICE=plms`, `PLMS_USERNAME`, `PLMS_PASSWORD`를 사용합니다. 메일의 `MAIL_TENANT`는 선택 사항이며 기본값은 기존 helper의 POSTECH tenant입니다. 프로세스 환경 변수가 설정 파일보다 우선합니다. 현재 디렉터리의 `.env`를 자동으로 읽지 않습니다.
+LMS는 `LMS_SERVICE=plms`, `PLMS_USERNAME`, `PLMS_PASSWORD`를 사용합니다. 메일의 `MAIL_TENANT`는 선택 사항이며 기본값은 POSTECH tenant입니다. 프로세스 환경 변수가 설정 파일보다 우선합니다. 현재 디렉터리의 `.env`를 자동으로 읽지 않습니다.
 
 메일은 기존 `~/.config/lms-helper/outlook-token.json` 로그인을 재사용합니다. 로그인이 필요하면 **별도 터미널**에서 실행하세요.
 
@@ -118,4 +118,8 @@ python3 scripts/smoke.py --live-env /absolute/path/private.env
 # LMS만 실제 조회하려면 위 명령에 --modules lms 추가
 ```
 
-`src/server.rs`는 도구 스키마·라우팅, `src/backend/lms.rs`와 `mail.rs`는 서비스 연결, `attachments.rs`는 첨부 ID·출력 형식, `tests/protocol.rs`는 MCP 통신 회귀 테스트를 담당합니다. 기존 helper 수정은 고정된 의존 커밋을 갱신하기 전까지 이 서버에 반영되지 않습니다.
+`src/server.rs`는 도구 스키마·라우팅, `src/backend/lms.rs`와 `mail.rs`는 서비스 연결, `attachments.rs`는 첨부 ID·출력 형식, `tests/protocol.rs`는 MCP 통신 회귀 테스트를 담당합니다. `src/services`의 PLMS·Outlook 클라이언트와 파서는 이 저장소에서 직접 수정·검증합니다.
+
+### 서비스 코드 출처
+
+`src/services`는 `Wooangha/lms-helper`의 커밋 `5eab343cf153ea22d215f1172fd262a1e52df885`에서 필요한 조회 코드와 테스트를 옮겨 독립적으로 관리합니다. Discord, LLM 분석, 자동 알림·모니터링 코드는 포함하지 않습니다. 기존 Outlook 토큰 경로는 로그인 호환성을 위한 것으로, helper 프로그램 설치나 실행은 필요하지 않습니다.

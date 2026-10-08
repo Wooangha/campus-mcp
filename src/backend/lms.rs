@@ -1,4 +1,4 @@
-use lms_helper::{
+use crate::services::{
     content::{self, Content, ContentCache},
     lms::{Lms, LmsConfig, Scope, plms::PlmsClient},
     submissions::{Assignment, SubmissionError},
@@ -339,7 +339,7 @@ mod tests {
                 .contains("pause")
         );
         let dir = tempfile::tempdir().unwrap();
-        let mut cache = ContentCache::new(lms_helper::content::ContentConfig {
+        let mut cache = ContentCache::new(crate::services::content::ContentConfig {
             cache_dir: dir.path().into(),
             max_file_bytes: 1024,
             max_total_bytes: 1024,

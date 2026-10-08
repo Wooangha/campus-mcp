@@ -2,9 +2,9 @@ mod attachments;
 pub mod lms;
 pub mod mail;
 
+use crate::services::content::{ContentCache, ContentConfig};
 use async_trait::async_trait;
 use attachments::Attachments;
-use lms_helper::content::{ContentCache, ContentConfig};
 use rmcp::model::CallToolResult;
 use serde_json::{Value, json};
 use std::{path::PathBuf, time::Duration};
@@ -91,7 +91,10 @@ pub fn error_result(message: String) -> CallToolResult {
 
 fn stamp(mut value: Value) -> Value {
     if let Some(object) = value.as_object_mut() {
-        object.insert("fetched_at".into(), json!(lms_helper::time::now_unix()));
+        object.insert(
+            "fetched_at".into(),
+            json!(crate::services::time::now_unix()),
+        );
         object.insert("untrusted_source".into(), json!(true));
     }
     value

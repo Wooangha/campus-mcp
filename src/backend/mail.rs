@@ -1,7 +1,7 @@
 //! Read-only Outlook access. Login is an explicit CLI operation, never an MCP tool.
 //! The existing `$HOME/.config/lms-helper/outlook-token.json` refresh-token
 //! cache is intentionally shared with lms-helper; no second login store is made.
-use lms_helper::{
+use crate::services::{
     content::{Content, ContentCache, ContentError},
     mail::{MailConfig, MailError, Message, OutlookClient},
 };
@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn partial_results_keep_source_data_without_raw_diagnostics() {
         let secret = "https://example.test/?access_token=fixture-secret";
-        let mut file = lms_helper::content::Attachment::remote(
+        let mut file = crate::services::content::Attachment::remote(
             "fixture.pdf".into(),
             "https://graph.microsoft.com/file".into(),
             false,

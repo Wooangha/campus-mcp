@@ -1,5 +1,5 @@
+use crate::services::content::Content;
 use base64::{Engine, engine::general_purpose::STANDARD};
-use lms_helper::content::Content;
 use rmcp::model::{CallToolResult, ContentBlock, ResourceContents};
 use serde_json::{Value, json};
 use std::{
@@ -33,7 +33,7 @@ impl Attachments {
             });
             json!({"id":id,"name":file.name,"inline":file.inline,"downloaded":id.is_some(),"size_bytes":size_bytes,"within_read_size_limit":size_bytes.map(|n| n <= MAX_BYTES as u64),"warning":file.error.map(|_| "Attachment download failed or exceeded the download limit")})
         }).collect();
-        json!({"title":content.title,"body":content.body.chars().take(100_000).collect::<String>(),"body_truncated":content.body.chars().count()>100_000,"attachments":files,"warnings":warnings,"fetched_at":lms_helper::time::now_unix(),"untrusted_source":true})
+        json!({"title":content.title,"body":content.body.chars().take(100_000).collect::<String>(),"body_truncated":content.body.chars().count()>100_000,"attachments":files,"warnings":warnings,"fetched_at":crate::services::time::now_unix(),"untrusted_source":true})
     }
     pub fn read(&self, args: &Value) -> Result<CallToolResult, String> {
         let id = args["id"].as_str().ok_or("id is required")?;
@@ -127,7 +127,7 @@ mod tests {
                 .read(&json!({"id":path.to_string_lossy()}))
                 .is_err()
         );
-        let mut attachment = lms_helper::content::Attachment::remote(
+        let mut attachment = crate::services::content::Attachment::remote(
             "text.txt".into(),
             "https://example.com".into(),
             false,
@@ -169,7 +169,7 @@ mod tests {
         let mut registry = Attachments::default();
         let mut first = String::new();
         for i in 0..129 {
-            let mut file = lms_helper::content::Attachment::remote(
+            let mut file = crate::services::content::Attachment::remote(
                 "text.txt".into(),
                 "https://example.test".into(),
                 false,
